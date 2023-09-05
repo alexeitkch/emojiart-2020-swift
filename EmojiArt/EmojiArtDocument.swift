@@ -6,24 +6,41 @@
 //
 
 import SwiftUI
-//ViewModel проекта, через него изменения модели - экземпляра EmojiArt, будут передаваться View
+
+//ViewModel для каждой новой игры создается новый экземпляр класса
 class EmojiArtDocument: ObservableObject {
     
     static let palette: String = "⭐️🌨🍎🥨⚾️"
     
-    //экземпляр Model проекта
-    @Published private var emojiArt: EmojiArt = EmojiArt()
+    //при создании экземпляра класса создается экземпляр модели игры
+    //@Published
+    private var emojiArt: EmojiArt {
+        willSet {
+            objectWillChange.send()
+        }
+        didSet {
+            print("json = \(emojiArt.json?.utf8 ?? "nil")")
+            UserDefaults.standard.set(emojiArt.json, forKey: EmojiArtDocument.untitled)
+        }
+    }
     
-    //изображение которое будем получать из браузера методом drag_and_drop
+    private static let untitled = "EmojiArtDocument.Untitled"
+    
+    init() {
+        emojiArt = EmojiArt(json: UserDefaults.standard.data(forKey: EmojiArtDocument.untitled)) ?? EmojiArt()
+        fetchBackgroundImageData()
+    }
+    
+    //изображение фона, которое будет получаться из браузера методом drag_and_drop
     @Published private(set) var backgroundImage: UIImage?
     
-    
+    //массив эмоджи для экземпляра игры
     var emojis: [EmojiArt.Emoji] { emojiArt.emojis }
     
     //MARK: - Intent(s)
-    //методы которыми можно изменять модель
+    //методы которыми можно изменять экземпляр модели
     
-    //добавить новый объект
+    //добавить новый объект в массив эмоджи
     func addEmoji(_ emoji: String, at location: CGPoint, size: CGFloat) {
         emojiArt.addEmoji(emoji, x: Int(location.x), y: Int(location.y), size: Int(size))
     }

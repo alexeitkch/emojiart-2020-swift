@@ -8,20 +8,20 @@
 import Foundation
 
 //Модель игры EmojiArt
-struct EmojiArt {
+struct EmojiArt: Codable {
     //хранит ссылку на картинку фона или null
     var backgroundURL: URL?
     
-    //массив - хранение добавленных в игру Emoji
+    //массив - хранение добавленных в игру эмоджи с координатами и размером
     var emojis = [Emoji]()
     
     //структура элемента игры Emoji
-    struct Emoji: Identifiable {
-        let text: String //не меняется выбирается из палетты
-        var x: Int //будет изменяться пользователем
-        var y: Int //будет изменяться пользователем
-        var size: Int //будет изменяться пользователем
-        let id: Int //не будет меняться, создается при добавлении элемента
+    struct Emoji: Identifiable, Codable, Hashable {
+        let text: String //не меняется, выбирается из палетты
+        var x: Int //изменяется пользователем
+        var y: Int //изменяется пользователем
+        var size: Int //изменяется пользователем
+        let id: Int //не меняется, создается при добавлении элемента
         
         //делает невозможным создание Emoji кроме как через метод addEmoji
         fileprivate init(text: String, x: Int, y: Int, size: Int, id: Int) {
@@ -32,6 +32,20 @@ struct EmojiArt {
             self.id = id
         }
     }
+    
+    var json: Data? {
+        return try? JSONEncoder().encode(self)
+    }
+    
+    init?(json: Data?) {
+        if json != nil, let newEmojiArt = try? JSONDecoder().decode(EmojiArt.self, from: json!) {
+            self = newEmojiArt
+        } else {
+            return nil
+        }
+    }
+    
+    init() { }
     
     //хранит номер последнего созданного Emoji
     private var uniqueEmojiId = 0
